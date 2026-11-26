@@ -4,7 +4,7 @@
 
 Repositories and demos were reviewed on 26 November 2026. UHRET supplied the team and challenge mappings. The NASA Details and Project tabs were inaccessible, so the headings below follow the current repositories. Official submission titles, submission recordings and awards remain unverified. Features reflect the current public materials, which may include changes made after the event.
 
-Repositories with a UHRET fork link are configured to synchronize hourly with their upstream repositories. Active development takes place upstream.
+UHRET’s six project forks are configured to synchronize automatically with their original repositories every hour. Active development takes place upstream.
 
 ## ARES Mission Planner
 
@@ -26,9 +26,9 @@ TypeScript, Vite and Web Audio power a map and globe, Data Listening and Ambient
 
 **Caly's Check Engine Club - UHRET** · [Abandoned but not Forgotten: Storytelling about NASA’s Discarded Equipment on the Moon and Mars](https://www.spaceappschallenge.org/2026/challenges/nasas-discarded-equipment-storytelling/?tab=teams)
 
-Ren’Py 8.5.3 runs the English and Turkish visual novel. The full version has eight discoveries across the Moon and Mars. The Apollo 17 demo covers four lunar discoveries. Both let readers inspect photos, ask questions and revisit sources. Caly and the journey are fictional. No repository-wide license was found. The source record identifies character artwork with unresolved redistribution rights.
+Ren’Py 8.5.3 runs the English and Turkish visual novel. The full version has eight discoveries across the Moon and Mars. The Apollo 17 demo covers four lunar discoveries. Both let readers inspect photos, ask questions and revisit sources. Caly and the journey are fictional. No repository-wide license was found. The original asset records document the earlier uncertainty about the character artwork. The rights confirmation supplied to UHRET covers publishing both repositories as public forks on GitHub.
 
-[Original repository](https://github.com/Hakanefe25/caly-full) · [Reviewed revision](https://github.com/Hakanefe25/caly-full/tree/c55f3597f0d4dc1f5875e34823b24dacda170f50) · [Technical source](https://github.com/Hakanefe25/caly-full/blob/c55f3597f0d4dc1f5875e34823b24dacda170f50/SOURCES.md) · [NASA team record](https://www.spaceappschallenge.org/2026/find-a-team/calys-check-engine-club/) · [Apollo 17 demo](https://github.com/Hakanefe25/caly-demo)
+[UHRET fork](https://github.com/oztimurlarmtaluhret/caly-full) · [Original repository](https://github.com/Hakanefe25/caly-full) · [Reviewed revision](https://github.com/Hakanefe25/caly-full/tree/c55f3597f0d4dc1f5875e34823b24dacda170f50) · [Technical source](https://github.com/Hakanefe25/caly-full/blob/c55f3597f0d4dc1f5875e34823b24dacda170f50/SOURCES.md) · [NASA team record](https://www.spaceappschallenge.org/2026/find-a-team/calys-check-engine-club/) · [Apollo 17 demo · UHRET](https://github.com/oztimurlarmtaluhret/caly-demo) · [Original demo repository](https://github.com/Hakanefe25/caly-demo)
 
 ## QK norm — BlindSpot Explorer
 

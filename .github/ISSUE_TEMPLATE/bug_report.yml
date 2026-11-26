@@ -1,0 +1,19 @@
+name: Bug report / Hata bildirimi
+description: Report a reproducible problem in this project.
+body:
+  - type: markdown
+    attributes:
+      value: Keep credentials, personal details and security reports out of public issues.
+  - type: textarea
+    id: details
+    attributes:
+      label: Expected and actual result / Beklenen ve gerçekleşen sonuç
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps / Yeniden üretme adımları
+      description: Include the version, device or browser when it helps reproduce the problem.
+    validations:
+      required: true

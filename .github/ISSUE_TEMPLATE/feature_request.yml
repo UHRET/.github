@@ -1,0 +1,17 @@
+name: Feature request / Özellik önerisi
+description: Suggest an improvement to this project.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / İhtiyaç
+      description: Explain who is affected and what they are trying to do.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal / Öneri
+      description: Describe the change and its expected result.
+    validations:
+      required: true

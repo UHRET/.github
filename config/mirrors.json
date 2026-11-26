@@ -17,17 +17,15 @@
     "source": "Hakanefe25/caly-full",
     "destination": "oztimurlarmtaluhret/caly-full",
     "source_id": 1458845714,
-    "destination_id": null,
-    "mode": "disabled",
-    "reason": "Narrator artwork redistribution rights are unresolved"
+    "destination_id": 1473142325,
+    "mode": "automatic"
   },
   {
     "source": "Hakanefe25/caly-demo",
     "destination": "oztimurlarmtaluhret/caly-demo",
     "source_id": 1458807544,
-    "destination_id": null,
-    "mode": "disabled",
-    "reason": "Narrator artwork redistribution rights are unresolved"
+    "destination_id": 1473142452,
+    "mode": "automatic"
   },
   {
     "source": "eeea2222/QK-norm-UHRET",

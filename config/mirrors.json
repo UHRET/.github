@@ -4,8 +4,7 @@
     "destination": "oztimurlarmtaluhret/ARES-Mission-Control",
     "source_id": 1457577185,
     "destination_id": 1473070854,
-    "mode": "disabled",
-    "reason": "Enable after the EarthSona hosted pilot succeeds"
+    "mode": "automatic"
   },
   {
     "source": "grassified/EarthSona",
@@ -35,15 +34,13 @@
     "destination": "oztimurlarmtaluhret/QK-norm-UHRET",
     "source_id": 1458982774,
     "destination_id": 1473070873,
-    "mode": "disabled",
-    "reason": "Enable after the EarthSona hosted pilot succeeds"
+    "mode": "automatic"
   },
   {
     "source": "ilyascinar593-ops/solar-pulse",
     "destination": "oztimurlarmtaluhret/solar-pulse",
     "source_id": 1458958701,
     "destination_id": 1473070859,
-    "mode": "disabled",
-    "reason": "Enable after the EarthSona hosted pilot succeeds"
+    "mode": "automatic"
   }
 ]

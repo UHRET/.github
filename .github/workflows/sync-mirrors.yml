@@ -51,20 +51,22 @@ jobs:
       matrix:
         repository: ${{ fromJSON(needs.plan.outputs.targets) }}
     name: Sync ${{ matrix.repository }}
-    env:
-      SYNC_KEY_CONFIGURED: ${{ secrets.UHRET_MIRROR_APP_KEY != '' }}
     steps:
+      - name: Verify GitHub App configuration
+        env:
+          SYNC_REPOSITORY: ${{ matrix.repository }}
+          HAS_APP_ID: ${{ vars.UHRET_MIRROR_APP_ID != '' }}
+          HAS_PRIVATE_KEY: ${{ secrets.UHRET_MIRROR_APP_KEY != '' }}
+        run: |
+          if [[ "$HAS_APP_ID" != true || "$HAS_PRIVATE_KEY" != true ]]; then
+            printf -- '- %s: failed. Configure the GitHub App ID and private key before syncing.\n' "$SYNC_REPOSITORY" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::GitHub App configuration is incomplete."
+            exit 1
+          fi
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - if: env.SYNC_KEY_CONFIGURED != 'true'
-        run: |
-          echo "- $SYNC_REPOSITORY: skipped — configure the GitHub App private key." >> "$GITHUB_STEP_SUMMARY"
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then exit 1; fi
-        env:
-          SYNC_REPOSITORY: ${{ matrix.repository }}
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
-        if: env.SYNC_KEY_CONFIGURED == 'true'
         id: app
         with:
           app-id: ${{ vars.UHRET_MIRROR_APP_ID }}
@@ -74,8 +76,7 @@ jobs:
           permission-administration: read
           permission-contents: write
           permission-workflows: write
-      - if: env.SYNC_KEY_CONFIGURED == 'true'
-        run: python3 scripts/sync-mirror.py "$SYNC_REPOSITORY"
+      - run: python3 scripts/sync-mirror.py "$SYNC_REPOSITORY"
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           SYNC_REPOSITORY: ${{ matrix.repository }}

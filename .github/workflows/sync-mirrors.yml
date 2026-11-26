@@ -1,0 +1,59 @@
+name: Synchronize project mirrors
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uhret-project-mirrors
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      targets: ${{ steps.matrix.outputs.targets }}
+      enabled: ${{ steps.matrix.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - id: matrix
+        run: |
+          targets=$(jq -c '[.[] | select(.enabled == true) | .destination | split("/")[1]]' config/mirrors.json)
+          printf '%s\n' "targets=$targets" "enabled=$(jq length <<<"$targets")" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | select(.enabled == false) | "- \(.destination) — skipped (not enabled)"' config/mirrors.json >> "$GITHUB_STEP_SUMMARY"
+  sync:
+    needs: plan
+    if: needs.plan.outputs.enabled != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        repository: ${{ fromJSON(needs.plan.outputs.targets) }}
+    name: Mirror ${{ matrix.repository }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        id: app
+        with:
+          app-id: ${{ vars.UHRET_MIRROR_APP_ID }}
+          private-key: ${{ secrets.UHRET_MIRROR_APP_KEY }}
+          owner: oztimurlarmtaluhret
+          repositories: ${{ matrix.repository }}
+          permission-administration: read
+          permission-contents: write
+          permission-workflows: write
+      - run: python3 scripts/sync-mirror.py "$MIRROR_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          MIRROR_REPOSITORY: ${{ matrix.repository }}

@@ -1,0 +1,50 @@
+[
+  {
+    "source": "baban9999ytr/ARES-Mission-Control",
+    "destination": "oztimurlarmtaluhret/ARES-Mission-Control",
+    "source_id": 1457577185,
+    "destination_id": 1457487843,
+    "enabled": false,
+    "approved_refs": {}
+  },
+  {
+    "source": "grassified/EarthSona",
+    "destination": "oztimurlarmtaluhret/EarthSona",
+    "source_id": 1457837796,
+    "destination_id": null,
+    "enabled": false,
+    "approved_refs": {}
+  },
+  {
+    "source": "Hakanefe25/caly-full",
+    "destination": "oztimurlarmtaluhret/caly-full",
+    "source_id": 1458845714,
+    "destination_id": null,
+    "enabled": false,
+    "approved_refs": {}
+  },
+  {
+    "source": "Hakanefe25/caly-demo",
+    "destination": "oztimurlarmtaluhret/caly-demo",
+    "source_id": 1458807544,
+    "destination_id": null,
+    "enabled": false,
+    "approved_refs": {}
+  },
+  {
+    "source": "eeea2222/QK-norm-UHRET",
+    "destination": "oztimurlarmtaluhret/QK-norm-UHRET",
+    "source_id": 1458982774,
+    "destination_id": null,
+    "enabled": false,
+    "approved_refs": {}
+  },
+  {
+    "source": "ilyascinar593-ops/solar-pulse",
+    "destination": "oztimurlarmtaluhret/solar-pulse",
+    "source_id": 1458958701,
+    "destination_id": null,
+    "enabled": false,
+    "approved_refs": {}
+  }
+]

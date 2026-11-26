@@ -1,0 +1,29 @@
+# UHRET proje aynaları
+
+Bu dosyalar kurulum taslağıdır. Altı eşleme kapalıdır ve bu paket herhangi bir depo oluşturmaz.
+
+## İlk eşitlemeden önce
+
+1. Özgün deponun sahibiyle aktif geliştirme adresini ve yeniden dağıtım kapsamını yazılı olarak doğrula. İncelenen tüm branch/tag uçlarını, geçmişi, veri ve model bildirimlerini, dosya kaynağını ve varlık izinlerini kaydet. Sızıntı taramasını geçmişi kapsayacak şekilde yerelde yap ve bulguların içeriğini yayımlama. Bir unsurun yetkisi belirsiz kalırsa eşlemeyi kapalı tut.
+2. Yetkili bir organizasyon hesabıyla GitHub’da yalnızca onaylanmış eşlemeler için boş, herkese açık hedef oluştur. README, lisans veya başlangıç commit’i ekleme. Mevcut ARES hedefinde Git içeriğine ek olarak Apps, Webhooks, Deployments/Environments ve Pages ayarlarını incele. Çakışan iş veya entegrasyon varsa hedefi kullanma.
+3. Hedefte Settings → Actions → General → Actions permissions → Disable actions seç. Settings → Pages’de yayının kapalı olduğunu doğrula. Hedefe bağlı harici dağıtım, webhook veya bağımlılık botu bulunmadığını kontrol et. Kaynak varsayılan dalıyla hedefi uyumlu tut. İlk aktarım sonrası bu dalı, depo görünürlüğünü ve dağıtımları tekrar kontrol et.
+4. Hedef About açıklamasına “Synchronized mirror of [project name] by [team] – UHRET. Active development: [upstream URL].” gir. Website alanına upstream adresini yaz. Topics için uhret, nasa-space-apps, nasa-space-apps-2026 ve mirror etiketlerini ekle.
+5. [Organizasyon GitHub Apps ayarlarında](https://github.com/organizations/oztimurlarmtaluhret/settings/apps) özel bir GitHub App oluştur. Webhook gerekmez. Repository permissions alanında Administration: Read, Contents: Read and write ve Workflows: Read and write seç. Metadata okuma otomatik verilir. Uygulamayı yalnızca onaylanmış ayna hedeflerine kur. Upstream ve yöneten .github deposunu kurulum kapsamına ekleme. Workflows yazma izni, upstream workflow dosyalarını Git geçmişiyle birlikte taşıyabilmek içindir. Aynaların Actions ayarı kapalı kalır.
+6. GitHub App ayarlarında App ID’yi al ve özel anahtar oluştur. [Yöneten deponun Actions secrets and variables ekranında](https://github.com/oztimurlarmtaluhret/.github/settings/secrets/actions) özel anahtarı UHRET_MIRROR_APP_KEY adlı repository secret olarak ekle. App ID’yi aynı bölümün Variables sekmesinde UHRET_MIRROR_APP_ID olarak ekle. Anahtarı sohbet, dosya veya loga yazma.
+7. GitHub App kurulumu mümkün olmazsa, Owner onayıyla [fine-grained PAT ekranında](https://github.com/settings/personal-access-tokens/new) kaynak sahibi olarak organizasyonu, yalnızca uygun hedefleri, kısa bir geçerlilik ve aynı depo izinlerini seç. Organizasyon onayı gereken bir token beklemedeyken çalışmaz. Token’ı UHRET_MIRROR_PAT repository secret olarak kaydet. Token adımını çıkar ve Python adımındaki GH_TOKEN değerini bu secret’a bağla. Bu alternatif varsayılan yapılandırmaya dahil değildir.
+8. Bu taslağın .github/workflows, scripts, config ve docs dosyalarını .github deposuna scoped PR olarak ekle. Tüm eşlemeler kapalıyken bir çalıştırma yalnızca atlananları listeler. Her hak denetimi tamamlandığında yapılandırmadaki destination_id değerine GitHub repository ID’sini gir. approved_refs alanına incelenen tam ref adlarını ve Git nesne SHA’larını ekle. Annotated tag için soyulmuş commit SHA’sını değil tag nesnesi SHA’sını kullan. Yalnızca o eşlemede enabled değerini true yap ve değişikliği incelet. Örnek ref adı refs/heads/main.
+9. Actions → Synchronize project mirrors → Run workflow ile elle çalıştır. Her hedef için başarılı sonuç, varsayılan dal commit’i ve tüm branch/tag eşitliği görünmeden aynayı operasyonel olarak işaretleme. Kaynak ve hedef için git ls-remote --refs ile çıktıyı bağımsız karşılaştır. Aynanın About, Actions ve Deployments ekranlarını doğrula. Ardından İngilizce ve Türkçe profil ile katalogda upstream ve ayna bağlantılarını birlikte yayımla.
+
+## Çalışma biçimi
+
+GitHub Actions, UTC 00:23, 06:23, 12:23 ve 18:23’te planlanır. Türkiye saatiyle 03:23, 09:23, 15:23 ve 21:23. GitHub yoğunlukta çalıştırmayı geciktirebilir ve 60 gün eylemsiz kalan herkese açık depolarda zamanlamayı devre dışı bırakabilir. [GitHub zamanlama belgeleri](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
+
+Git branş ve etiketleri, upstream’le aynı nesne kimlikleriyle ve ileri sarma üzerinden güncellenir. Her çalıştırmada onaylanmış ref listesi upstream’le karşılaştırılır. Yeni veya değişen bir ref, inceleme güncellenene kadar durdurulur. Bu, kapsamı açıkça belirlenmemiş gelecekteki içeriğin otomatik dağıtılmasını engeller. Yayımlamaya izin verilen yeni snapshot merged olduğunda sıradaki zamanlama bu değişiklikleri senkronize eder.
+
+Senkronizasyon önce depo kimliğini, hedef Actions ve Pages durumunu ve ref’leri kontrol eder. Ardından Git kuru deneme ve atomik gönderim yapar. Diverjans, silinen upstream branch veya değiştirilmiş tag varsa durur. LFS nesneleri veya geçmişte submodule kullanımı için bu sürüm durur. Yetki alındığında bunlar için ayrı yükleme ve nesne hash doğrulaması gerekir. GitHub issue, PR, release eki, discussion ve Secret’lar taşınmaz.
+
+## Durdurma ve geri alma
+
+1. Acil durdurma için GitHub Actions altında workflow’u devre dışı bırak ve çalışan işleri iptal et. Gerekirse GitHub App kurulumundan hedef depo erişimini kaldır. Bir eşlemeyi kalıcı olarak durdurmak için config’de enabled alanını false yap.
+2. Yanlış bir ref veya hak sorunu ortaya çıkarsa iş kaydını ve uç commit’leri kaydet. Bu iş Git verisini silmez ve ref geçmişini geri zorlamaz. İçeriğin geri çekilmesi gerekiyorsa Owner, hak sahibiyle koordineli olarak görünürlük, arşiv veya silme kararı vermeli. Otomasyon kapatıldıktan sonra ayna bağlantılarını profilden çıkar.
+3. Anahtar ifşa olursa GitHub App ayarlarında ilgili anahtarı iptal et, GitHub Actions secret’ı değiştir ve iş kayıtlarını incele. Upstream, Netlify ve Cloudflare dağıtımları ayrı kalır.

@@ -6,15 +6,15 @@ UHRET, Bursa’da Öztimurlar Mesleki ve Teknik Anadolu Lisesi bünyesinde, Ulus
 
 ## NASA Space Apps Challenge 2026 · Bursa
 
-Beş UHRET takımı, Bursa’da beş projeyle yer aldı. Projelerin güncel geliştirme çalışmaları aşağıdaki özgün depolardan takip edilebilir.
+Beş UHRET takımı, Bursa’da beş projeyle yer aldı. UHRET fork’u bağlantısı olan depolar, özgün depolarından saatlik eşitleme için yapılandırılmıştır. Aktif geliştirme özgün depolarda yürütülür.
 
 | Proje | Ekip | Açıklama | Bağlantılar |
 | --- | --- | --- | --- |
-| ARES Mission Planner | 7Page - UHRET | Jezero Krateri haritasında kısa ve arazi koşullarını gözeten rotaları karşılaştıran araştırma prototipi. | [Özgün depo](https://github.com/baban9999ytr/ARES-Mission-Control) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/7page-uhret/) · [Canlı demo](https://spcapps.openstacktool.com/) |
-| EarthSona | Asteronix - UHRET | NASA’nın yayımladığı Dünya görsellerini tarayıcıda sese dönüştüren, harita ve küre üzerinden keşif yapılabilen uygulama. | [Özgün depo](https://github.com/grassified/EarthSona) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/asteronix-uhret/) · [Canlı demo](https://earthsona.netlify.app/) |
+| ARES Mission Planner | 7Page - UHRET | Jezero Krateri haritasında kısa ve arazi koşullarını gözeten rotaları karşılaştıran araştırma prototipi. | [UHRET fork’u](https://github.com/oztimurlarmtaluhret/ARES-Mission-Control) · [Özgün depo](https://github.com/baban9999ytr/ARES-Mission-Control) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/7page-uhret/) · [Canlı demo](https://spcapps.openstacktool.com/) |
+| EarthSona | Asteronix - UHRET | NASA’nın yayımladığı Dünya görsellerini tarayıcıda sese dönüştüren, harita ve küre üzerinden keşif yapılabilen uygulama. | [UHRET fork’u](https://github.com/oztimurlarmtaluhret/EarthSona) · [Özgün depo](https://github.com/grassified/EarthSona) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/asteronix-uhret/) · [Canlı demo](https://earthsona.netlify.app/) |
 | CALY: LEFT BEHIND | Caly's Check Engine Club - UHRET | NASA arşiv fotoğraflarıyla Ay ve Mars görevlerinden geriye kalan ekipmanı anlatan iki dilli görsel roman. | [Özgün depo](https://github.com/Hakanefe25/caly-full) · [Apollo 17](https://github.com/Hakanefe25/caly-demo) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/calys-check-engine-club/) |
-| QK norm — BlindSpot Explorer | Qk norm - UHRET | Mikro yerçekiminde yanma deneylerini ve yangın algılamadaki araştırma boşluklarını inceleyen prototip. Bilimsel doğrulama henüz tamamlanmadı. | [Özgün depo](https://github.com/eeea2222/QK-norm-UHRET) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/qk-norm-uhret/) |
-| Solar Pulse | Solar Pulse - UHRET | Astronot sağlığı, egzersiz ve görev planlamasını bir araya getiren eğitim prototipi. GitHub’da proje tanıtımı yayımlanmış durumda. | [Özgün depo](https://github.com/ilyascinar593-ops/solar-pulse) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/solar-pulse-uhret/) |
+| QK norm — BlindSpot Explorer | Qk norm - UHRET | Mikro yerçekiminde yanma deneylerini ve yangın algılamadaki araştırma boşluklarını inceleyen prototip. Bilimsel doğrulama henüz tamamlanmadı. | [UHRET fork’u](https://github.com/oztimurlarmtaluhret/QK-norm-UHRET) · [Özgün depo](https://github.com/eeea2222/QK-norm-UHRET) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/qk-norm-uhret/) |
+| Solar Pulse | Solar Pulse - UHRET | Astronot sağlığı, egzersiz ve görev planlamasını bir araya getiren eğitim prototipi. GitHub’da proje tanıtımı yayımlanmış durumda. | [UHRET fork’u](https://github.com/oztimurlarmtaluhret/solar-pulse) · [Özgün depo](https://github.com/ilyascinar593-ops/solar-pulse) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/solar-pulse-uhret/) |
 
 [Proje kataloğu, kaynaklar ve sınırlamalar](../docs/PROJECTS.tr.md)
 

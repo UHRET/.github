@@ -4,7 +4,7 @@
 
 Depolar ve örnek uygulamalar 26 Kasım 2026’da incelendi. Ekip ve yarışma konusu eşleştirmeleri UHRET tarafından sağlandı. NASA Details ve Project sekmeleri erişilemediği için aşağıdaki adlar güncel depo adlandırmasını yansıtır. Resmî gönderim başlıkları, resmî sunum kayıtları ve dereceler doğrulanmayı bekliyor. Özellikler bugünkü kamuya açık durumu anlatır. Yarışma sonrası çalışmalar ayrıca kaynaklarda tarihlenir.
 
-UHRET fork’u bağlantısı olan depolar, özgün depolarından saatlik eşitleme için yapılandırılmıştır. Aktif geliştirme özgün depolarda yürütülür.
+UHRET’in altı proje fork’u, özgün depolarıyla otomatik eşitleme için saatlik olarak yapılandırılmıştır. Aktif geliştirme özgün depolarda yürütülür.
 
 ## ARES Mission Planner
 
@@ -26,9 +26,9 @@ TypeScript, Vite ve Web Audio ile harita ve küre keşfi, Data Listening ve Ambi
 
 **Caly's Check Engine Club - UHRET** · [Abandoned but not Forgotten: Storytelling about NASA’s Discarded Equipment on the Moon and Mars](https://www.spaceappschallenge.org/2026/challenges/nasas-discarded-equipment-storytelling/?tab=teams)
 
-İngilizce ve Türkçe görsel roman Ren’Py 8.5.3 ile çalışır. Tam sürüm Ay ve Mars’ta sekiz, Apollo 17 demosu Ay’da dört keşif içerir. İki sürümde de fotoğraf inceleme, soru sorma ve kaynakları yeniden açma vardır. Caly ve yolculuk kurgusaldır. Depo geneli lisansı bulunamadı. Kaynak kaydı, yeniden dağıtım hakkı belirsiz karakter çizimini açıkça belirtiyor.
+İngilizce ve Türkçe görsel roman Ren’Py 8.5.3 ile çalışır. Tam sürüm Ay ve Mars’ta sekiz, Apollo 17 demosu Ay’da dört keşif içerir. İki sürümde de fotoğraf inceleme, soru sorma ve kaynakları yeniden açma vardır. Caly ve yolculuk kurgusaldır. Depo geneli lisansı bulunamadı. Özgün depoların varlık kayıtları, karakter çizimine ilişkin ilk belirsizliği belgeliyor. UHRET’e sağlanan hak teyidi, iki deponun GitHub içinde herkese açık fork olarak yayımlanmasını kapsıyor.
 
-[Özgün depo](https://github.com/Hakanefe25/caly-full) · [İncelenen sürüm](https://github.com/Hakanefe25/caly-full/tree/c55f3597f0d4dc1f5875e34823b24dacda170f50) · [Teknik kaynak](https://github.com/Hakanefe25/caly-full/blob/c55f3597f0d4dc1f5875e34823b24dacda170f50/SOURCES.md) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/calys-check-engine-club/) · [Apollo 17 demo](https://github.com/Hakanefe25/caly-demo)
+[UHRET fork’u](https://github.com/oztimurlarmtaluhret/caly-full) · [Özgün depo](https://github.com/Hakanefe25/caly-full) · [İncelenen sürüm](https://github.com/Hakanefe25/caly-full/tree/c55f3597f0d4dc1f5875e34823b24dacda170f50) · [Teknik kaynak](https://github.com/Hakanefe25/caly-full/blob/c55f3597f0d4dc1f5875e34823b24dacda170f50/SOURCES.md) · [NASA ekip kaydı](https://www.spaceappschallenge.org/2026/find-a-team/calys-check-engine-club/) · [Apollo 17 demosu · UHRET](https://github.com/oztimurlarmtaluhret/caly-demo) · [Özgün demo deposu](https://github.com/Hakanefe25/caly-demo)
 
 ## QK norm — BlindSpot Explorer
 

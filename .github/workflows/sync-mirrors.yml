@@ -1,15 +1,26 @@
-name: Synchronize project mirrors
+name: Synchronize project forks
 
 on:
   schedule:
-    - cron: '23 */6 * * *'
+    - cron: '23 * * * *'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Verify and plan updates without writing destination refs
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/sync-mirrors.yml
+      - config/mirrors.json
+      - scripts/sync-mirror.py
+      - scripts/test-sync-mirror.py
 
 permissions:
   contents: read
 
 concurrency:
-  group: uhret-project-mirrors
+  group: uhret-project-forks-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
   cancel-in-progress: false
 
 jobs:
@@ -18,19 +29,20 @@ jobs:
     timeout-minutes: 5
     outputs:
       targets: ${{ steps.matrix.outputs.targets }}
-      enabled: ${{ steps.matrix.outputs.enabled }}
+      count: ${{ steps.matrix.outputs.count }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+      - run: python3 scripts/test-sync-mirror.py
       - id: matrix
         run: |
-          targets=$(jq -c '[.[] | select(.enabled == true) | .destination | split("/")[1]]' config/mirrors.json)
-          printf '%s\n' "targets=$targets" "enabled=$(jq length <<<"$targets")" >> "$GITHUB_OUTPUT"
-          jq -r '.[] | select(.enabled == false) | "- \(.destination) — skipped (not enabled)"' config/mirrors.json >> "$GITHUB_STEP_SUMMARY"
+          targets=$(jq -ce '[.[] | select(.mode != "disabled") | .destination | split("/")[1]]' config/mirrors.json)
+          printf '%s\n' "targets=$targets" "count=$(jq length <<<"$targets")" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | select(.mode == "disabled") | "- \(.destination): skipped — \(.reason)"' config/mirrors.json >> "$GITHUB_STEP_SUMMARY"
   sync:
     needs: plan
-    if: needs.plan.outputs.enabled != '0'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.plan.outputs.count != '0'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -38,12 +50,21 @@ jobs:
       max-parallel: 3
       matrix:
         repository: ${{ fromJSON(needs.plan.outputs.targets) }}
-    name: Mirror ${{ matrix.repository }}
+    name: Sync ${{ matrix.repository }}
+    env:
+      SYNC_KEY_CONFIGURED: ${{ secrets.UHRET_MIRROR_APP_KEY != '' }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+      - if: env.SYNC_KEY_CONFIGURED != 'true'
+        run: |
+          echo "- $SYNC_REPOSITORY: skipped — configure the GitHub App private key." >> "$GITHUB_STEP_SUMMARY"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then exit 1; fi
+        env:
+          SYNC_REPOSITORY: ${{ matrix.repository }}
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        if: env.SYNC_KEY_CONFIGURED == 'true'
         id: app
         with:
           app-id: ${{ vars.UHRET_MIRROR_APP_ID }}
@@ -53,7 +74,9 @@ jobs:
           permission-administration: read
           permission-contents: write
           permission-workflows: write
-      - run: python3 scripts/sync-mirror.py "$MIRROR_REPOSITORY"
+      - if: env.SYNC_KEY_CONFIGURED == 'true'
+        run: python3 scripts/sync-mirror.py "$SYNC_REPOSITORY"
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-          MIRROR_REPOSITORY: ${{ matrix.repository }}
+          SYNC_REPOSITORY: ${{ matrix.repository }}
+          SYNC_DRY_RUN: ${{ inputs.dry_run || false }}

@@ -71,7 +71,7 @@ jobs:
         with:
           app-id: ${{ vars.UHRET_MIRROR_APP_ID }}
           private-key: ${{ secrets.UHRET_MIRROR_APP_KEY }}
-          owner: oztimurlarmtaluhret
+          owner: uhret
           repositories: ${{ matrix.repository }}
           permission-administration: read
           permission-contents: write

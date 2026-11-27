@@ -10,7 +10,8 @@ from pathlib import Path, PurePosixPath
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
-ORG = "uhret"
+ORG = "UHRET"
+ORG_ID = 334489527
 REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 SECRET = re.compile(
     rb"-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----"
@@ -25,6 +26,12 @@ MAX_RATE_LIMIT_WAIT = 120
 
 class SyncError(Exception):
     pass
+
+
+def repository_key(name):
+    if isinstance(name, str) and REPOSITORY.fullmatch(name):
+        return name.lower()
+    return None
 
 
 def report(message):
@@ -133,13 +140,18 @@ def verify_settings(entry):
     source = public_api(f"repos/{entry['source']}")
     destination = private_api(f"repos/{entry['destination']}")
     for repo, role in ((source, "source"), (destination, "destination")):
-        if repo.get("full_name") != entry[role] or repo.get("id") != entry[f"{role}_id"]:
+        if (repository_key(repo.get("full_name")) != repository_key(entry[role])
+                or repo.get("id") != entry[f"{role}_id"]):
             raise SyncError(f"Unexpected {role} repository identity.")
         if repo.get("visibility") != "public" or repo.get("archived") or repo.get("disabled"):
             raise SyncError(f"The {role} must be an active public repository.")
-    expected_parent = (entry["source"], entry["source_id"])
-    parent = destination.get("parent", {})
-    if destination.get("fork") is not True or (parent.get("full_name"), parent.get("id")) != expected_parent:
+    owner = destination.get("owner") or {}
+    if owner.get("id") != ORG_ID or str(owner.get("login", "")).lower() != ORG.lower():
+        raise SyncError("Unexpected destination organization identity.")
+    expected_parent = (repository_key(entry["source"]), entry["source_id"])
+    parent = destination.get("parent") or {}
+    if (destination.get("fork") is not True
+            or (repository_key(parent.get("full_name")), parent.get("id")) != expected_parent):
         raise SyncError("Destination is no longer a native fork of the configured upstream.")
     if destination.get("has_pages") is not False:
         raise SyncError("Destination Pages is enabled or undetermined.")
@@ -237,8 +249,10 @@ def inspect_incoming(directory, changes, already_synced):
 
 def sync(entry, dry_run=False):
     source, destination = entry["source"], entry["destination"]
-    if (not REPOSITORY.fullmatch(source) or not REPOSITORY.fullmatch(destination)
-            or source.split("/")[0].lower() == ORG or not destination.startswith(f"{ORG}/")
+    source_key, destination_key = repository_key(source), repository_key(destination)
+    owner_prefix = f"{ORG.lower()}/"
+    if (not source_key or not destination_key
+            or source_key.startswith(owner_prefix) or not destination_key.startswith(owner_prefix)
             or not entry["source_id"] or not entry["destination_id"]):
         raise SyncError("Invalid source or destination coordinates.")
     default = verify_settings(entry)
@@ -297,12 +311,28 @@ def sync(entry, dry_run=False):
         return f"Verified {len(upstream)} upstream branches/tags after push; default {after[default]}."
 
 
-def main(argv):
+def load_entries():
     entries = json.loads(Path("config/mirrors.json").read_text(encoding="utf-8"))
-    matches = [row for row in entries if row["destination"] == f"{ORG}/{argv[1]}"]
-    if len(matches) != 1 or matches[0]["mode"] == "disabled":
-        raise SyncError("Destination is missing, duplicated or disabled.")
-    entry = matches[0]
+    by_destination = {}
+    for entry in entries:
+        key = repository_key(entry["destination"])
+        if not key or not key.startswith(f"{ORG.lower()}/"):
+            raise SyncError("Invalid destination coordinates in mirror configuration.")
+        if key in by_destination:
+            raise SyncError("Duplicate destination in mirror configuration.")
+        by_destination[key] = entry
+    return by_destination
+
+
+def main(argv):
+    entries = load_entries()
+    if argv[1] == "--validate-config":
+        if argv[2].lower() != ORG.lower() or argv[3] != str(ORG_ID):
+            raise SyncError("Unexpected workflow organization identity.")
+        return "Verified mirror configuration and workflow organization."
+    entry = entries.get(repository_key(f"{ORG}/{argv[1]}"))
+    if entry is None or entry["mode"] == "disabled":
+        raise SyncError("Destination is missing or disabled.")
     report(f"{entry['source']} → {entry['destination']}")
     return sync(entry, os.environ.get("SYNC_DRY_RUN") == "true")
 

@@ -9,7 +9,7 @@ from pathlib import Path, PurePosixPath
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
-ORG = "oztimurlarmtaluhret"
+ORG = "uhret"
 REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 SECRET = re.compile(
     rb"-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----"

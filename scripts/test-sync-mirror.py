@@ -1,6 +1,7 @@
 import contextlib
 import importlib.util
 import io
+import json
 import os
 import subprocess
 import tempfile
@@ -12,6 +13,37 @@ os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 spec = importlib.util.spec_from_file_location("sync_mirror", Path(__file__).with_name("sync-mirror.py"))
 mirror = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mirror)
+
+
+class ConfigurationTests(unittest.TestCase):
+    def test_organization_and_automatic_mappings(self):
+        self.assertEqual(mirror.ORG, "uhret")
+        config = Path(__file__).resolve().parents[1] / "config" / "mirrors.json"
+        entries = json.loads(config.read_text(encoding="utf-8"))
+        self.assertCountEqual(
+            [
+                (entry["source"], entry["source_id"], entry["destination"],
+                 entry["destination_id"], entry["mode"])
+                for entry in entries
+            ],
+            [
+                ("baban9999ytr/ARES-Mission-Control", 1457577185, "uhret/ARES-Mission-Control", 1473070854, "automatic"),
+                ("grassified/EarthSona", 1457837796, "uhret/EarthSona", 1473069003, "automatic"),
+                ("Hakanefe25/caly-full", 1458845714, "uhret/caly-full", 1473142325, "automatic"),
+                ("Hakanefe25/caly-demo", 1458807544, "uhret/caly-demo", 1473142452, "automatic"),
+                ("eeea2222/QK-norm-UHRET", 1458982774, "uhret/QK-norm-UHRET", 1473070873, "automatic"),
+                ("ilyascinar593-ops/solar-pulse", 1458958701, "uhret/solar-pulse", 1473070859, "automatic"),
+            ],
+        )
+
+    def test_rejects_other_destination_owners_before_network_access(self):
+        for owner in ("former-owner", "uhret-other"):
+            with self.subTest(owner=owner), patch.object(mirror, "verify_settings") as verify:
+                entry = {"source": "fixture/Project", "source_id": 10,
+                         "destination": f"{owner}/Project", "destination_id": 20}
+                with self.assertRaisesRegex(mirror.SyncError, "Invalid source or destination"):
+                    mirror.sync(entry)
+                verify.assert_not_called()
 
 
 class SettingsTests(unittest.TestCase):
@@ -45,6 +77,16 @@ class SettingsTests(unittest.TestCase):
         self.source["id"] = 10
         self.source["visibility"] = "private"
         with self.assertRaisesRegex(mirror.SyncError, "active public"):
+            self.verify()
+
+    def test_destination_and_parent_ids(self):
+        self.assertEqual(self.verify(), "refs/heads/main")
+        self.destination["id"] = 21
+        with self.assertRaisesRegex(mirror.SyncError, "destination repository identity"):
+            self.verify()
+        self.destination["id"] = 20
+        self.destination["parent"] = self.source | {"id": 11}
+        with self.assertRaisesRegex(mirror.SyncError, "native fork"):
             self.verify()
 
     def test_auth_failure_redacts_raw_output(self):

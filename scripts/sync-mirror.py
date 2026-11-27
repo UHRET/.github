@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import subprocess
@@ -19,6 +20,7 @@ SECRET = re.compile(
 )
 LFS_POINTER = b"version https://git-lfs.github.com/spec/v1"
 REVIEW_FILE = re.compile(r"^(?:copying|licen[cs]e|notice|copyright|attribution|sources)(?:[._-].*)?$", re.I)
+MAX_RATE_LIMIT_WAIT = 120
 
 
 class SyncError(Exception):
@@ -74,18 +76,48 @@ def read_git(directory, description, *args, authenticated=False):
         time.sleep(2)
 
 
+def public_api_rate_limit(error):
+    if error.code not in (403, 429):
+        return None
+    retry_after = error.headers.get("Retry-After", "")
+    primary = error.headers.get("X-RateLimit-Remaining") == "0"
+    if not primary and not retry_after and error.code == 403:
+        message = error.read(4096).lower()
+        if b"secondary rate limit" not in message and b"rate limit exceeded" not in message:
+            return None
+    delay = max(1, int(retry_after)) if retry_after.isdecimal() else 60
+    if primary:
+        reset = error.headers.get("X-RateLimit-Reset", "")
+        if not reset.isdecimal():
+            return "primary", None
+        reset_delay = math.ceil(int(reset) - time.time()) + 1
+        return "primary", max(delay if retry_after else 1, reset_delay)
+    return "secondary or unspecified", delay
+
+
 def public_api(path):
     for attempt in range(2):
+        delay = 2
         try:
             with urlopen(f"https://api.github.com/{path}", timeout=20) as response:
                 return json.load(response)
         except HTTPError as error:
-            if attempt or error.code not in (429, 500, 502, 503, 504):
-                raise SyncError(f"GitHub public API returned HTTP {error.code}; check visibility, availability and rate limits.") from None
+            with error:
+                rate_limit = public_api_rate_limit(error)
+            if rate_limit:
+                kind, delay = rate_limit
+                message = f"GitHub public API {kind} rate limit (HTTP {error.code})"
+                if attempt:
+                    raise SyncError(f"{message} persisted after one retry.") from None
+                if delay is None or delay > MAX_RATE_LIMIT_WAIT:
+                    raise SyncError(f"{message}; the retry window is unknown or exceeds {MAX_RATE_LIMIT_WAIT}s.") from None
+                report(f"{message}; retrying once after {delay}s.")
+            elif attempt or error.code not in (500, 502, 503, 504):
+                raise SyncError(f"GitHub public API returned HTTP {error.code}; check visibility and access.") from None
         except (URLError, TimeoutError):
             if attempt:
                 raise SyncError("GitHub public API was unreachable after one retry.") from None
-        time.sleep(2)
+        time.sleep(delay)
 
 
 def private_api(path):

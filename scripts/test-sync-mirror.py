@@ -6,7 +6,9 @@ import os
 import subprocess
 import tempfile
 import unittest
+from email.message import Message
 from pathlib import Path
+from urllib.error import HTTPError
 from unittest.mock import patch
 
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -103,6 +105,47 @@ class SettingsTests(unittest.TestCase):
         with patch.object(mirror.time, "sleep"), patch.object(mirror, "git", side_effect=[transient, good]) as git:
             self.assertEqual(mirror.read_git(".", "Checking", "status"), b"ok")
             self.assertEqual(git.call_count, 2)
+
+
+class PublicApiTests(unittest.TestCase):
+    def error(self, status, headers, body=b""):
+        message = Message()
+        for name, value in headers.items():
+            message[name] = value
+        return HTTPError("https://api.github.com/", status, "fixture", message, io.BytesIO(body))
+
+    def test_primary_limit_waits_for_reset_and_retry_after(self):
+        headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1030", "Retry-After": "5"}
+        with patch.object(mirror, "urlopen", side_effect=[self.error(403, headers), io.BytesIO(b"[]")]) as request, \
+                patch.object(mirror.time, "time", return_value=1000), \
+                patch.object(mirror.time, "sleep") as sleep, patch.object(mirror, "report"):
+            self.assertEqual(mirror.public_api("repos/fixture/Project"), [])
+            self.assertEqual(request.call_count, 2)
+            sleep.assert_called_once_with(31)
+
+    def test_secondary_limit_defaults_to_one_minute_and_only_one_retry(self):
+        body = b'{"message":"You have exceeded a secondary rate limit."}'
+        errors = [self.error(403, {}, body), self.error(429, {}, body)]
+        with patch.object(mirror, "urlopen", side_effect=errors) as request, \
+                patch.object(mirror.time, "sleep") as sleep, patch.object(mirror, "report"):
+            with self.assertRaisesRegex(mirror.SyncError, "persisted after one retry"):
+                mirror.public_api("repos/fixture/Project")
+            self.assertEqual(request.call_count, 2)
+            sleep.assert_called_once_with(60)
+
+    def test_does_not_retry_access_failures_or_excessive_waits(self):
+        cases = [
+            (self.error(403, {}, b"Forbidden"), "check visibility and access"),
+            (self.error(429, {"Retry-After": "121"}), "exceeds 120s"),
+            (self.error(403, {"X-RateLimit-Remaining": "0"}), "retry window is unknown"),
+        ]
+        for error, expected in cases:
+            with self.subTest(expected=expected), patch.object(mirror, "urlopen", side_effect=error) as request, \
+                    patch.object(mirror.time, "sleep") as sleep:
+                with self.assertRaisesRegex(mirror.SyncError, expected):
+                    mirror.public_api("repos/fixture/Project")
+                request.assert_called_once()
+                sleep.assert_not_called()
 
 
 class GitTests(unittest.TestCase):

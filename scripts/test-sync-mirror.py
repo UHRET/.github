@@ -19,7 +19,7 @@ spec.loader.exec_module(mirror)
 
 class ConfigurationTests(unittest.TestCase):
     def test_organization_and_automatic_mappings(self):
-        self.assertEqual(mirror.ORG, "uhret")
+        self.assertEqual(mirror.ORG, "UHRET")
         config = Path(__file__).resolve().parents[1] / "config" / "mirrors.json"
         entries = json.loads(config.read_text(encoding="utf-8"))
         self.assertCountEqual(
@@ -29,12 +29,12 @@ class ConfigurationTests(unittest.TestCase):
                 for entry in entries
             ],
             [
-                ("baban9999ytr/ARES-Mission-Control", 1457577185, "uhret/ARES-Mission-Control", 1473070854, "automatic"),
-                ("grassified/EarthSona", 1457837796, "uhret/EarthSona", 1473069003, "automatic"),
-                ("Hakanefe25/caly-full", 1458845714, "uhret/caly-full", 1473142325, "automatic"),
-                ("Hakanefe25/caly-demo", 1458807544, "uhret/caly-demo", 1473142452, "automatic"),
-                ("eeea2222/QK-norm-UHRET", 1458982774, "uhret/QK-norm-UHRET", 1473070873, "automatic"),
-                ("ilyascinar593-ops/solar-pulse", 1458958701, "uhret/solar-pulse", 1473070859, "automatic"),
+                ("baban9999ytr/ARES-Mission-Control", 1457577185, "UHRET/ARES-Mission-Control", 1473070854, "automatic"),
+                ("grassified/EarthSona", 1457837796, "UHRET/EarthSona", 1473069003, "automatic"),
+                ("Hakanefe25/caly-full", 1458845714, "UHRET/caly-full", 1473142325, "automatic"),
+                ("Hakanefe25/caly-demo", 1458807544, "UHRET/caly-demo", 1473142452, "automatic"),
+                ("eeea2222/QK-norm-UHRET", 1458982774, "UHRET/QK-norm-UHRET", 1473070873, "automatic"),
+                ("ilyascinar593-ops/solar-pulse", 1458958701, "UHRET/solar-pulse", 1473070859, "automatic"),
             ],
         )
 
@@ -47,12 +47,53 @@ class ConfigurationTests(unittest.TestCase):
                     mirror.sync(entry)
                 verify.assert_not_called()
 
+    def test_rejects_same_organization_as_upstream(self):
+        entry = {"source": "uHrEt/Other", "source_id": 10,
+                 "destination": "UHRET/Project", "destination_id": 20}
+        with patch.object(mirror, "verify_settings") as verify:
+            with self.assertRaisesRegex(mirror.SyncError, "Invalid source or destination"):
+                mirror.sync(entry)
+            verify.assert_not_called()
+
+    def test_duplicate_destinations_are_rejected_before_matrix_planning(self):
+        entries = [
+            {"destination": "UHRET/Project", "mode": "automatic"},
+            {"destination": "uhret/pRoJeCt", "mode": "disabled"},
+        ]
+        with patch.object(mirror.Path, "read_text", return_value=json.dumps(entries)):
+            with self.assertRaisesRegex(mirror.SyncError, "Duplicate destination"):
+                mirror.main(["sync", "--validate-config", "UHRET", str(mirror.ORG_ID)])
+
+    def test_destination_selection_normalizes_only_the_coordinate(self):
+        entry = {"source": "Fixture/Project", "destination": "uHrEt/Project", "mode": "automatic"}
+        with patch.object(mirror.Path, "read_text", return_value=json.dumps([entry])), \
+                patch.object(mirror, "sync", return_value="verified") as sync, patch.object(mirror, "report"):
+            self.assertEqual(mirror.main(["sync", "pRoJeCt"]), "verified")
+            sync.assert_called_once()
+            self.assertEqual(sync.call_args.args[0], entry)
+            for invalid in ("other", "other/Project"):
+                with self.assertRaisesRegex(mirror.SyncError, "missing"):
+                    mirror.main(["sync", invalid])
+            entry["mode"] = "disabled"
+        with patch.object(mirror.Path, "read_text", return_value=json.dumps([entry])):
+            with self.assertRaisesRegex(mirror.SyncError, "disabled"):
+                mirror.main(["sync", "project"])
+
+    def test_workflow_organization_name_and_id(self):
+        with patch.object(mirror.Path, "read_text", return_value="[]"):
+            self.assertIn("Verified", mirror.main(["sync", "--validate-config", "uhret", "334489527"]))
+            self.assertIn("Verified", mirror.main(["sync", "--validate-config", "UHRET", "334489527"]))
+            for owner, org_id in (("UHRET", "334489528"), ("other", "334489527")):
+                with self.assertRaisesRegex(mirror.SyncError, "workflow organization identity"):
+                    mirror.main(["sync", "--validate-config", owner, org_id])
+
 
 class SettingsTests(unittest.TestCase):
     def setUp(self):
         self.source = {"full_name": "fixture/Project", "id": 10, "visibility": "public", "default_branch": "main"}
         self.destination = {"full_name": f"{mirror.ORG}/Project", "id": 20, "visibility": "public",
                             "default_branch": "main", "parent": self.source,
+                            "owner": {"login": "UHRET", "id": 334489527},
                             "fork": True, "has_pages": False}
         self.entry = {"source": self.source["full_name"], "source_id": 10,
                       "destination": self.destination["full_name"], "destination_id": 20}
@@ -89,6 +130,36 @@ class SettingsTests(unittest.TestCase):
         self.destination["id"] = 20
         self.destination["parent"] = self.source | {"id": 11}
         with self.assertRaisesRegex(mirror.SyncError, "native fork"):
+            self.verify()
+
+    def test_api_coordinates_and_parent_can_use_canonical_casing(self):
+        self.entry["source"] = "FIXTURE/pRoJeCt"
+        self.entry["destination"] = "uhret/project"
+        self.destination["parent"] = self.source | {"full_name": "FiXtUrE/PROject"}
+        self.assertEqual(self.verify(), "refs/heads/main")
+        self.source["full_name"] = "fixture/Other"
+        with self.assertRaisesRegex(mirror.SyncError, "source repository identity"):
+            self.verify()
+        self.source["full_name"] = "fixture/Project"
+        self.destination["full_name"] = "UHRET/Other"
+        with self.assertRaisesRegex(mirror.SyncError, "destination repository identity"):
+            self.verify()
+        self.destination["full_name"] = "UHRET/Project"
+        self.destination["parent"]["full_name"] = "other/Project"
+        with self.assertRaisesRegex(mirror.SyncError, "native fork"):
+            self.verify()
+
+    def test_destination_organization_must_match_both_name_and_id(self):
+        self.destination["owner"]["login"] = "uHrEt"
+        self.assertEqual(self.verify(), "refs/heads/main")
+        for owner in ({"login": "UHRET", "id": 34}, {"login": "other", "id": 334489527}):
+            self.destination["owner"] = owner
+            with self.assertRaisesRegex(mirror.SyncError, "organization identity"):
+                self.verify()
+
+    def test_default_branch_stays_case_sensitive(self):
+        self.destination["default_branch"] = "Main"
+        with self.assertRaisesRegex(mirror.SyncError, "Default branch settings differ"):
             self.verify()
 
     def test_auth_failure_redacts_raw_output(self):
@@ -199,6 +270,20 @@ class GitTests(unittest.TestCase):
         self.git(self.work, "push", str(self.up), ":topic/feature")
         self.assertIn("Verified 2", self.sync())
         self.assertIn("refs/heads/topic/feature", mirror.remote_refs(self.root, str(self.down)))
+
+    def test_git_branch_and_tag_names_stay_case_sensitive(self):
+        self.git(self.work, "branch", "topic")
+        self.git(self.work, "tag", "release")
+        self.commit("README", "next commit")
+        self.git(self.work, "branch", "Topic")
+        self.git(self.work, "tag", "Release")
+        self.git(self.work, "push", str(self.up), "topic", "Topic", "release", "Release")
+        self.entry["destination"] = "uhret/pRoJeCt"
+        self.assertIn("after push", self.sync())
+        upstream = mirror.remote_refs(self.root, str(self.up))
+        self.assertEqual(mirror.remote_refs(self.root, str(self.down)), upstream)
+        self.assertNotEqual(upstream["refs/heads/topic"], upstream["refs/heads/Topic"])
+        self.assertNotEqual(upstream["refs/tags/release"], upstream["refs/tags/Release"])
 
     def test_git_failures_do_not_affect_next_target(self):
         self.commit("README", "local changes")

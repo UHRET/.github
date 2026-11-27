@@ -36,7 +36,11 @@ jobs:
           persist-credentials: false
       - run: python3 scripts/test-sync-mirror.py
       - id: matrix
+        env:
+          WORKFLOW_OWNER: ${{ github.repository_owner }}
+          WORKFLOW_OWNER_ID: ${{ github.repository_owner_id }}
         run: |
+          python3 scripts/sync-mirror.py --validate-config "$WORKFLOW_OWNER" "$WORKFLOW_OWNER_ID"
           targets=$(jq -ce '[.[] | select(.mode != "disabled") | .destination | split("/")[1]]' config/mirrors.json)
           printf '%s\n' "targets=$targets" "count=$(jq length <<<"$targets")" >> "$GITHUB_OUTPUT"
           jq -r '.[] | select(.mode == "disabled") | "- \(.destination): skipped — \(.reason)"' config/mirrors.json >> "$GITHUB_STEP_SUMMARY"
@@ -71,7 +75,7 @@ jobs:
         with:
           app-id: ${{ vars.UHRET_MIRROR_APP_ID }}
           private-key: ${{ secrets.UHRET_MIRROR_APP_KEY }}
-          owner: uhret
+          owner: ${{ github.repository_owner }}
           repositories: ${{ matrix.repository }}
           permission-administration: read
           permission-contents: write
